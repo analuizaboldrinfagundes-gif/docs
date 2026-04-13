@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Calendário Semanal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header role="banner">
+        <div class="header-main">
+            <div class="header-left">
+                <button id="today-btn" class="secondary-btn today-btn" aria-label="Voltar para hoje">Hoje</button>
+                <div class="nav-arrows" role="group" aria-label="Navegação de semanas">
+                    <button id="prev-week" class="icon-btn" aria-label="Semana anterior">&lt;</button>
+                    <button id="next-week" class="icon-btn" aria-label="Próxima semana">&gt;</button>
+                </div>
+                <h1 id="month-year" aria-live="polite">Abril 2024</h1>
+            </div>
+
+            <div class="header-center">
+                <div class="view-switcher" role="radiogroup" aria-label="Trocar visualização">
+                    <button class="view-btn active" data-view="week">Semana</button>
+                    <button class="view-btn" data-view="month">Mês</button>
+                    <button class="view-btn" data-view="year">Ano</button>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <div class="search-container">
+                    <input type="text" id="search-client" placeholder="Pesquisar cliente..." list="client-suggestions" aria-label="Pesquisar cliente por nome">
+                    <datalist id="client-suggestions"></datalist>
+                </div>
+                <div class="filter-group-horizontal" role="group" aria-label="Filtros de data">
+                    <select id="filter-month" aria-label="Selecionar mês">
+                        <option value="0">Janeiro</option>
+                        <option value="1">Fevereiro</option>
+                        <option value="2">Março</option>
+                        <option value="3">Abril</option>
+                        <option value="4">Maio</option>
+                        <option value="5">Junho</option>
+                        <option value="6">Julho</option>
+                        <option value="7">Agosto</option>
+                        <option value="8">Setembro</option>
+                        <option value="9">Outubro</option>
+                        <option value="10">Novembro</option>
+                        <option value="11">Dezembro</option>
+                    </select>
+                    <select id="filter-year" aria-label="Selecionar ano"></select>
+                    <input type="date" id="filter-date" aria-label="Ir para data específica">
+                </div>
+            </div>
+        </div>
+
+        <div class="header-bottom">
+            <div class="finance-summary" role="region" aria-label="Resumo financeiro mensal">
+                <div class="finance-card paid" aria-live="polite">
+                    <span class="label">Mensal Pago</span>
+                    <strong id="total-paid">R$ 0,00</strong>
+                </div>
+                <div class="finance-card pending" aria-live="polite">
+                    <span class="label">Mensal em Aberto</span>
+                    <strong id="total-pending">R$ 0,00</strong>
+                </div>
+            </div>
+            <p id="week-range" aria-live="polite">07 - 13 de Abril</p>
+        </div>
+    </header>
+
+    <main class="calendar-wrapper" role="main">
+        <div class="calendar-container">
+            <!-- Grade de Horários (Contém Cabeçalho e Slots) -->
+            <div class="calendar-grid" id="calendar-grid" role="grid" aria-label="Calendário de agendamentos">
+                <!-- Gerado dinamicamente via JS -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal para Editar Evento -->
+    <div id="event-modal" class="modal" role="dialog" aria-labelledby="modal-title" aria-modal="true">
+        <div class="modal-content">
+            <h3 id="modal-title">Agendar Compromisso</h3>
+            <p id="modal-details" aria-live="polite"></p>
+            
+            <div class="form-group">
+                <label for="client-name">Nome do Cliente:</label>
+                <input type="text" id="client-name" placeholder="Ex: João Silva" required>
+            </div>
+
+            <div class="form-group">
+                <label for="procedure-type">Tipo do Procedimento:</label>
+                <input type="text" id="procedure-type" placeholder="Ex: Corte de Cabelo" required>
+            </div>
+
+            <div class="form-group">
+                <label for="procedure-value">Valor do Procedimento (R$):</label>
+                <input type="text" id="procedure-value" placeholder="Ex: 50,00" required>
+            </div>
+
+            <div class="form-group">
+                <label for="event-color">Cor do Agendamento:</label>
+                <div class="color-options">
+                    <input type="color" id="event-color" value="#2563eb" aria-label="Escolher cor do agendamento">
+                    <span class="color-preview" aria-hidden="true"></span>
+                </div>
+            </div>
+
+            <div class="form-group" role="radiogroup" aria-labelledby="payment-status-label">
+                <label id="payment-status-label">Status do Pagamento:</label>
+                <div class="payment-toggle">
+                    <label class="toggle-item">
+                        <input type="radio" name="payment-status" value="paid">
+                        <span class="toggle-btn">Pago</span>
+                    </label>
+                    <label class="toggle-item">
+                        <input type="radio" name="payment-status" value="pending" checked>
+                        <span class="toggle-btn">Pendente</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group" id="payment-method-group" style="display: none;" role="radiogroup" aria-labelledby="payment-method-label">
+                <label id="payment-method-label">Forma de Pagamento:</label>
+                <div class="method-grid">
+                    <label class="method-item">
+                        <input type="radio" name="payment-method" value="Dinheiro" aria-label="Dinheiro">
+                        <div class="method-card" aria-hidden="true">
+                            <span class="method-icon">💵</span>
+                            <span class="method-name">Dinheiro</span>
+                        </div>
+                    </label>
+                    <label class="method-item">
+                        <input type="radio" name="payment-method" value="Pix" aria-label="Pix">
+                        <div class="method-card" aria-hidden="true">
+                            <span class="method-icon">📱</span>
+                            <span class="method-name">Pix</span>
+                        </div>
+                    </label>
+                    <label class="method-item">
+                        <input type="radio" name="payment-method" value="Débito" aria-label="Débito">
+                        <div class="method-card" aria-hidden="true">
+                            <span class="method-icon">💳</span>
+                            <span class="method-name">Débito</span>
+                        </div>
+                    </label>
+                    <label class="method-item">
+                        <input type="radio" name="payment-method" value="Crédito" aria-label="Crédito">
+                        <div class="method-card" aria-hidden="true">
+                            <span class="method-icon">💳</span>
+                            <span class="method-name">Crédito</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div id="form-error" class="error-msg" style="display: none;" role="alert">Por favor, preencha todos os campos!</div>
+
+            <div class="modal-actions">
+                <button id="save-event" class="primary-btn">Salvar Agendamento</button>
+                <button id="delete-event" class="danger-btn">Excluir</button>
+                <button id="close-modal" class="secondary-btn">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Convite para Tutorial (Welcome) -->
+    <div id="tutorial-welcome-modal" class="modal tutorial-modal" role="dialog" aria-labelledby="welcome-title" aria-modal="true">
+        <div class="modal-content">
+            <div class="tutorial-icon" aria-hidden="true">👋</div>
+            <h3 id="welcome-title">Bem-vindo(a)!</h3>
+            <p>Percebemos que esta é sua primeira visita. Gostaria de um tour rápido para aprender a usar sua nova agenda?</p>
+            <div class="modal-actions">
+                <button id="start-tutorial" class="primary-btn">Sim, me mostre!</button>
+                <button id="skip-tutorial" class="secondary-btn">Agora não, obrigado</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Passos do Tutorial (Tooltip Dinâmico) -->
+    <div id="tutorial-step-box" class="tutorial-tooltip" style="display: none;" role="status" aria-live="assertive">
+        <div class="tooltip-content">
+            <h4 id="tutorial-title">Título do Passo</h4>
+            <p id="tutorial-text">Descrição do que fazer...</p>
+            <div class="tooltip-footer">
+                <span id="tutorial-progress">1/5</span>
+                <div class="tooltip-buttons">
+                    <button id="next-tutorial-step" class="primary-btn small">Próximo</button>
+                    <button id="end-tutorial" class="secondary-btn small" aria-label="Encerrar tutorial">Sair</button>
+                </div>
+            </div>
+        </div>
+        <div class="tooltip-arrow" aria-hidden="true"></div>
+    </div>
+
+    <!-- Painel Lateral de Perfil do Cliente (Histórico) -->
+    <div id="client-side-panel" class="side-panel" role="complementary" aria-labelledby="profile-client-name">
+        <div class="side-panel-content">
+            <div class="side-panel-header">
+                <button id="close-profile" class="icon-btn close-panel-btn" aria-label="Fechar perfil do cliente">✕</button>
+                <h2 id="profile-client-name">Perfil do Cliente</h2>
+            </div>
+            
+            <div class="side-panel-body">
+                <div class="profile-stats-grid" role="region" aria-label="Estatísticas do cliente">
+                    <div class="stat-card">
+                        <span class="stat-label">Procedimentos</span>
+                        <strong id="profile-total-count" aria-live="polite">0</strong>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-label">Total Investido</span>
+                        <strong id="profile-total-value" aria-live="polite">R$ 0,00</strong>
+                    </div>
+                </div>
+
+                <h3 class="section-title">Histórico de Agendamentos</h3>
+                <div class="history-list-container" id="client-history-list" role="list" aria-label="Lista de agendamentos passados">
+                    <!-- Preenchido via JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer role="contentinfo">
+        <p>&copy; 2024 Calendário Pessoal Editável</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
